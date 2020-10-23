@@ -1,0 +1,11 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - sed -i "s/{ENVIRONMENT_NAME}/$ENVIRONMENT_NAME -/g" frontend/src/index.html
+      - sed -i "s/{API_ENDPOINT}/$API_ENDPOINT/g" frontend/src/index.html
+  post_build:
+    commands:
+      - cd frontend/src/
+      - aws s3 sync --cache-control no-store --delete Public s3://FRONTEND_S3_BUCKET

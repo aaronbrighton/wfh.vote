@@ -1,0 +1,8 @@
+# *** PLACEHOLD - TO BE IMPLEMENTED
+#1. Create the CodeCommit repo
+#2. Create the CodeBuild project
+#3. Create the Pipeline
+#4. Create a source stage tied to repo commits on prod branch
+#5. Create a build stage to build the SAM package(s)
+#6. Create a deploy stage that runs executes the SAM/CF templates
+#7. Create a build & deploy stage that pushes out the frontend to S3
