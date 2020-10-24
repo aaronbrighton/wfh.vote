@@ -533,7 +533,7 @@ Outputs:
     Value: 
       !If
         - CustomApiDomainSpecified
-        - !Sub 'https://${CustomApiDomain}'
-        - !Sub 'https://${CloudFrontDistribution.DomainName}'
+        - !Sub 'https://${CustomApiDomain}/api'
+        - !Sub 'https://${CloudFrontDistribution.DomainName}/api'
     Export:
       Name: !Sub '${AWS::StackName}:CDNApiDomain' # Used to cross-reference across CloudFormation stacks

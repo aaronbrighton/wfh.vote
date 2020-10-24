@@ -18,7 +18,7 @@ Frontend/Backend source for web service running live at: [https://wfh.vote/](htt
 - **`***CustomDomainZoneId***`**: (replace this with the Route53 zone ID for that higher level domain, ex. if we have a zone for wfh.vote, this would be it's zone id)
 - **`***CustomApiDomain***`**: "
 - **`***CustomApiDomainZoneId***`**: "
-##### 3. Do I want to prepend the frontend site's HTML "`<title>`" tag content with an environment name?
+##### 2. Do I want to prepend the frontend site's HTML "`<title>`" tag content with an environment name?
 - **`***ENVIRONMENT_NAME***`**: (replace this with the custom environment name, or leave it blank)
 ##### CloudFormation stack name for frontend service and backend votes service:
 - **`***CloudFormationFrontendName***`**: (name you'll give to the CloudFormation frontend stack name)
@@ -63,30 +63,31 @@ aws cloudformation describe-stacks --stack-name ***CloudFormationFrontendName***
 ```
 ##### 4. Make note of the value of "OutputValue" key associated with the "S3Bucket" and "CloudFrontDistribution" outputs, you'll need them in step 8 and 9 respectively.
 ##### 5. Deploy the backend votes service CloudFormation stack:
+##### 6. Deploy the backend votes service CloudFormation stack:
 - Without custom domains:
 ```
 sam build --template-file services/votes/sam.yml --build-dir .aws-sam/build
 cd .aws-sam/build
 sam package --output-template-file deploy.yml --s3-bucket aaronbrighton-cf-resources
-aws cloudformation create-stack --stack-name ***CloudFormationBackendVotesName*** --template-body file://deploy.yml -parameters ParameterKey=FrontEndCloudFormationStackName,ParameterValue=***CloudFormationFrontendName*** --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM
+aws cloudformation create-stack --stack-name ***CloudFormationBackendVotesName*** --template-body file://deploy.yml -parameters ParameterKey=FrontendCloudFormationStackName,ParameterValue=***CloudFormationFrontendName*** --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM
 ```
 - With custom domains:
 ```
 sam build --template-file services/votes/sam.yml --build-dir .aws-sam/build
 cd .aws-sam/build
 sam package --output-template-file deploy.yml --s3-bucket aaronbrighton-cf-resources
-aws cloudformation create-stack --stack-name ***CloudFormationBackendVotesName*** --template-body file://deploy.yml -parameters ParameterKey=FrontEndCloudFormationStackName,ParameterValue=***CloudFormationFrontendName*** ParameterKey=CustomApiDomain,ParameterValue=***CustomApiDomain*** ParameterKey=CustomApiDomainZoneId,ParameterValue=***CustomDomainApiZoneId*** --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM
+aws cloudformation create-stack --stack-name ***CloudFormationBackendVotesName*** --template-body file://deploy.yml -parameters ParameterKey=FrontendCloudFormationStackName,ParameterValue=***CloudFormationFrontendName*** ParameterKey=CustomApiDomain,ParameterValue=***CustomApiDomain*** ParameterKey=CustomApiDomainZoneId,ParameterValue=***CustomDomainApiZoneId*** --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM
 ```
-##### 6. Periodically describe the backend stack until it's "StackStatus" is "CREATE_COMPLATE":
+##### 7. Periodically describe the backend stack until it's "StackStatus" is "CREATE_COMPLATE":
 ```
 aws cloudformation describe-stacks --stack-name ***CloudFormationBackendVotesName***
 ```
-##### 7. Make note of the "OutputValue" associated with the "CloudFrontDistribution" output (this is your `***API_ENDPOINT***`), you'll need it in step 8.
-##### 8. Update the frontend static resources with the API endpoint url and deploy them to the frontend service S3 bucket:
+##### 8. Make note of the "OutputValue" associated with the "CloudFrontDistribution" output (this is your `***API_ENDPOINT***`), you'll need it in step 8.
+##### 9. Update the frontend static resources with the API endpoint url and deploy them to the frontend service S3 bucket:
 ```
 cd ../../frontend/src
 sed -i "s/{ENVIRONMENT_NAME}/***ENVIRONMENT_NAME*** -/g" index.html
-sed -i "s/{API_ENDPOINT}/***API_ENDPOINT***/g" index.html
+sed -i "s/{API_ENDPOINT}/***API_ENDPOINT***/g" index.html # Note: you may need to 
 aws s3 sync . s3://***STEP_8_VALUE***
 ```
-##### 9. That's it, checkout your new voting site setup at the URL you noted down in step 3 under the "CloudFrontDistribution" output.
+##### 10. That's it, checkout your new voting site setup at the URL you noted down in step 3 under the "CloudFrontDistribution" output.
