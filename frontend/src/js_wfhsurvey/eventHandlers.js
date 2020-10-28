@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", function (){
     var autocompleteInput = document.getElementById('companyName')
     var autocompleteCurrentFocus
     var companies = null
-    ajax(window._config.apiEndpoint.split('/')[2]+'/companies.json', 'GET', function(ajaxResult){
+    ajax('https://'+window._config.apiEndpoint.split('/')[2]+'/companies.json', 'GET', function(ajaxResult){
         companies = ajaxResult['Companies']
     });
 

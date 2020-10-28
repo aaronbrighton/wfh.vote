@@ -1,11 +1,14 @@
 version: 0.2
 
 phases:
+  pre_build:
+    commands:
+      - aws apigateway create-deployment --rest-api-id $API_ID --stage-name api # Needed otherwise changes to our API will not be promoted
   build:
     commands:
-      - sed -i "s/{ENVIRONMENT_NAME}/$ENVIRONMENT_NAME -/g" frontend/src/index.html
-      - sed -i "s/{API_ENDPOINT}/$API_ENDPOINT/g" frontend/src/index.html
+      - cd frontend/src/
+      - sed -i "s/{ENVIRONMENT_NAME}/$ENVIRONMENT_NAME/g" index.html
+      - sed -i "s;{API_ENDPOINT};$API_ENDPOINT;g" index.html # Using ; as separator as API ENDPOINT URL contains forward slashes
   post_build:
     commands:
-      - cd frontend/src/
-      - aws s3 sync --cache-control no-store --delete Public s3://FRONTEND_S3_BUCKET
+      - aws s3 sync --cache-control no-store --delete . s3://$FRONTEND_S3_BUCKET

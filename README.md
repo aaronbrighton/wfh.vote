@@ -2,92 +2,68 @@
 
 Frontend/Backend source for web service running live at: [https://wfh.vote/](https://wfh.vote/)
 
-## Requirements:
+## Prequisites
 
+* An AWS Account
+	* (Optionally) a domain who's DNS is managed/hosted in Route53 within the same account
 * AWS CLI
-	* With IAM user created and credentials configured within your shell: [https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-config](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-config)
+	* With IAM user (Admin Perms.) created and credentials configured within your shell: [https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-config](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-config)
+	* IAM Git credentials generated and stored: [https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up-gc.html#setting-up-gc-iam](https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up-gc.html#setting-up-gc-iam)
 * SAM CLI
 * Python 3
-* An AWS Account
-        - (Optionally) a domain who's DNS is managed/hosted in Route53 within the same account
+* Git (of course)
 
-## Checklist of decisions (jot answers to these down before starting):
+## Getting started (customization)
 
-##### 1. Do I want to use a custom domain for the frontend and/or backend votes service (optional)? If so:
-- **`***CustomDomain***`**: (replace this the domain name, a higher level domain matching this needs to exist in Route53, ex: dev.wfh.vote)
-- **`***CustomDomainZoneId***`**: (replace this with the Route53 zone ID for that higher level domain, ex. if we have a zone for wfh.vote, this would be it's zone id)
-- **`***CustomApiDomain***`**: "
-- **`***CustomApiDomainZoneId***`**: "
-##### 2. Do I want to prepend the frontend site's HTML "`<title>`" tag content with an environment name?
-- **`***ENVIRONMENT_NAME***`**: (replace this with the custom environment name, or leave it blank)
-##### CloudFormation stack name for frontend service and backend votes service:
-- **`***CloudFormationFrontendName***`**: (name you'll give to the CloudFormation frontend stack name)
-- **`***CloudFormationBackendVotesName***`**: (name you'll give to the CloudFormation backend votes stack name)
+Jot down answers to the following questions:
 
-An example of the above list might look like:
-
-```
-***CustomDomain***: dev.wfh.vote
-***CustomDomainZoneId***: Z3P5QSUBK4POTI
-***CustomApiDomain***: api.dev.wfh.vote
-***CustomApiDomainZoneId***: Z3P5QSUBK4POTI
-***ENVIRONMENT_NAME***: DEV
-***CloudFormationFrontendName***: wfhsurveydevfrontend
-***CloudFormationBackendVotesName***: wfhsurveydevbackendvotes
-```
-
-Or:
-
-````
-***ENVIRONMENT_NAME***:
-***CloudFormationFrontendName***: wfhsurveydevfrontend
-***CloudFormationBackendVotesName***: wfhsurveydevbackendvotes 
-````
+##### 1. What name should I use for the CodePipeline pipeline? (**`***CodePipelineName***`**)
+##### 2. What name should I use for the CodeRepo repository? (**`***CodeRepoName***`**)
+##### 3. (Optional) Do I want to use a custom domain for the frontend? (**`***CustomDomain***`**)
+- What is the Route53 Zone ID where I can create this DNS record? (**`***CustomDomainZoneId***`**)
+##### 4. (Optional) Do I want to use a custom domain for the backend votes API? (**`***CustomApiDomain***`**)
+- What is the Route53 Zone ID where I can create this DNS record? (**`***CustomApiDomainZoneId***`**)
+##### 5. (Optional) Do I want to add a custom environment name to the start of the frontend `<title>` tag? (**`***EnvironmentName***`**)
 
 
 ## Usage instructions:
 
-##### 1. Download contents of this repo
-##### 2. Deploy the frontend service CloudFormation stack:
-- Without custom domains:
+##### 1. Clone the repo
 ```
-aws cloudformation create-stack --stack-name ***CloudFormationFrontendName*** --template-body file://frontend/cf.yml
+git clone https://github.com/aaronbrighton/wfh.vote.git
 ```
-- With custom domains:
+##### 2. Deploy the pipeline stack (fill in the `***blanks***`)
 ```
-aws cloudformation create-stack --stack-name ***CloudFormationFrontendName*** --template-body file://frontend/cf.yml --parameters ParameterKey=CustomDomain,ParameterValue=***CustomDomain*** ParameterKey=CustomDomainZoneId,ParameterValue=***CustomDomainZoneId***
+aws cloudformation create-stack --stack-name ***CodePipelineName*** \
+--template-body file://pipeline-cf.yml --parameters \
+ParameterKey=CodePipelineName,ParameterValue=***CodePipelineName*** \
+ParameterKey=CodeRepoName,ParameterValue=***CodeRepoName*** \
+ParameterKey=CustomDomain,ParameterValue=***CustomDomain*** \
+ParameterKey=CustomDomainZoneId,ParameterValue=***CustomDomainZoneId*** \
+ParameterKey=CustomApiDomain,ParameterValue=***CustomApiDomain*** \
+ParameterKey=CustomApiDomainZoneId,ParameterValue=***CustomApiDomainZoneId*** \
+ParameterKey=EnvironmentName,ParameterValue=***EnvironmentName***
 ```
-##### 3. Periodically describe the frontend stack until it's "StackStatus" is "CREATE_COMPLETE":
+##### 3. Periodically describe the pipeline stack until it's "StackStatus" is "CREATE_COMPLETE"
 ```
-aws cloudformation describe-stacks --stack-name ***CloudFormationFrontendName***
+aws cloudformation describe-stacks --stack-name ***CodePipelineName***
 ```
-##### 4. Make note of the value of "OutputValue" key associated with the "S3Bucket" and "CloudFrontDistribution" outputs, you'll need them in step 8 and 9 respectively.
-##### 5. Deploy the backend votes service CloudFormation stack:
-##### 6. Deploy the backend votes service CloudFormation stack:
-- Without custom domains:
+##### 4. Make note of the "CodeCommitHTTPCloneUrl" output value once "StackStatus" is "CREATE_COMPLETE"
+##### 5. Update your git config to use the new CodeCommit repository
 ```
-sam build --template-file services/votes/sam.yml --build-dir .aws-sam/build
-cd .aws-sam/build
-sam package --output-template-file deploy.yml --s3-bucket aaronbrighton-cf-resources
-aws cloudformation create-stack --stack-name ***CloudFormationBackendVotesName*** --template-body file://deploy.yml -parameters ParameterKey=FrontendCloudFormationStackName,ParameterValue=***CloudFormationFrontendName*** --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM
+git init
+git remote add origin ***CodeCommitHTTPCloneUrl***
+git add *
+git commit -m "Initial commit"
+git push --set-upstream origin master
 ```
-- With custom domains:
+##### 5. Periodically describe the pipeline until the stage "DeployFrontendStaticAssets" has a status of "Succeeded"
 ```
-sam build --template-file services/votes/sam.yml --build-dir .aws-sam/build
-cd .aws-sam/build
-sam package --output-template-file deploy.yml --s3-bucket aaronbrighton-cf-resources
-aws cloudformation create-stack --stack-name ***CloudFormationBackendVotesName*** --template-body file://deploy.yml -parameters ParameterKey=FrontendCloudFormationStackName,ParameterValue=***CloudFormationFrontendName*** ParameterKey=CustomApiDomain,ParameterValue=***CustomApiDomain*** ParameterKey=CustomApiDomainZoneId,ParameterValue=***CustomDomainApiZoneId*** --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM
+aws codepipeline get-pipeline-state --name ***CodePipelineName***
 ```
-##### 7. Periodically describe the backend stack until it's "StackStatus" is "CREATE_COMPLATE":
+##### 6. Describe the frontend stack to get the URL for your live depoyment
+
 ```
-aws cloudformation describe-stacks --stack-name ***CloudFormationBackendVotesName***
+aws cloudformation describe-stacks --stack-name CF-***CodePipelineName***-Frontend
 ```
-##### 8. Make note of the "OutputValue" associated with the "CloudFrontDistribution" output (this is your `***API_ENDPOINT***`), you'll need it in step 8.
-##### 9. Update the frontend static resources with the API endpoint url and deploy them to the frontend service S3 bucket:
-```
-cd ../../frontend/src
-sed -i "s/{ENVIRONMENT_NAME}/***ENVIRONMENT_NAME*** -/g" index.html
-sed -i "s/{API_ENDPOINT}/***API_ENDPOINT***/g" index.html # Note: you may need to 
-aws s3 sync . s3://***STEP_8_VALUE***
-```
-##### 10. That's it, checkout your new voting site setup at the URL you noted down in step 3 under the "CloudFrontDistribution" output.
+##### 7. Make note of the "CloudFrontDistribution" output value, this is the URL to your live site!

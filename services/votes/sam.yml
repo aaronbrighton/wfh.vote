@@ -17,6 +17,15 @@ Conditions:
 Resources:
   S3Bucket:
     Type: AWS::S3::Bucket
+    Properties:
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins:
+              - !Join ['', ["https://", Fn::ImportValue: !Sub '${FrontendCloudFormationStackName}:CDNWebsiteDomain']]
+            AllowedMethods:
+              - GET
+            AllowedHeaders:
+              - '*'
   CloudFrontOriginAccessIdentity:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
     Properties:
@@ -106,7 +115,7 @@ Resources:
                 - dynamodb:GetRecords
               Resource: 
                 - !GetAtt DynamoDBTableCompanies.StreamArn
-                - !Join ['', ['arn:aws:s3:::', Fn::ImportValue: !Sub '${FrontendCloudFormationStackName}:S3Bucket', '/companies.json']]
+                - !Join ['', ['arn:aws:s3:::', !Ref S3Bucket, '/companies.json']]
             - Effect: Allow
               Action: dynamodb:ListStreams
               Resource: '*'
@@ -345,12 +354,24 @@ Resources:
         Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:dynamodb:action/PutItem'
         IntegrationResponses:
           - StatusCode: 200
+            SelectionPattern: 200
+            ResponseTemplates:
+              application/json: ''
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: !Join ['', ["'https://", Fn::ImportValue: !Sub '${FrontendCloudFormationStackName}:CDNWebsiteDomain', "'"]]
+          - StatusCode: 400
+            SelectionPattern: 400
             ResponseTemplates:
               application/json: ''
             ResponseParameters:
               method.response.header.Access-Control-Allow-Origin: !Join ['', ["'https://", Fn::ImportValue: !Sub '${FrontendCloudFormationStackName}:CDNWebsiteDomain', "'"]]
       MethodResponses:
         - StatusCode: 200
+          ResponseModels:
+            application/json: 'Empty'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: false
+        - StatusCode: 400
           ResponseModels:
             application/json: 'Empty'
           ResponseParameters:
@@ -537,3 +558,8 @@ Outputs:
         - !Sub 'https://${CloudFrontDistribution.DomainName}/api'
     Export:
       Name: !Sub '${AWS::StackName}:CDNApiDomain' # Used to cross-reference across CloudFormation stacks
+  ApiGatewayId:
+    Description: API Gateway resource ID
+    Value: !Ref ApiGatewayRestApi
+    Export:
+      Name: !Sub '${AWS::StackName}:ApiGatewayId'

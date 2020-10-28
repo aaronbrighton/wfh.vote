@@ -3,11 +3,12 @@ version: 0.2
 phases:
   build:
     commands:
-      - sam build --template-file services/votes/sam.yml --build-dir .aws-sam/build --debug
+      - sam build --template-file services/votes/sam.yml --build-dir .aws-sam/build
       - cd .aws-sam/build
   post_build:
     commands:
-      - sam package --output-template-file ../../services/votes/sam.yml --s3-bucket $SAM_RESOURCES_BUCKET --debug
+      - sam package --output-template-file ../../services/votes/sam.yml --s3-bucket $SAM_RESOURCES_BUCKET
+      - cd ../../
       
 artifacts:
   type: zip
