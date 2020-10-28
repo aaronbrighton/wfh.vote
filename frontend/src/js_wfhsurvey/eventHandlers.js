@@ -62,6 +62,27 @@ document.addEventListener("DOMContentLoaded", function (){
         }
     }
 
+    document.getElementById("sendMessage").addEventListener("click", function(event)
+    {
+        event.preventDefault();
+
+        // Disable button
+        this.value = "Sending..."
+        this.disabled;
+
+        // Send form inputs
+        api.sendMessage(document.getElementById('contactMessageEmail').value, document.getElementById('contactMessage').value, function(result){
+            if (result)
+            {
+                this.value = "Message Sent!"
+            }
+            else
+            {
+                this.value = "An error occurred..."
+            }
+        });
+    })
+
     //// Pop-up functionality for social media buttons
     ;(function($){
   

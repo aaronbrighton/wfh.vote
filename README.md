@@ -33,9 +33,10 @@ Jot down answers to the following questions:
 git clone https://github.com/aaronbrighton/wfh.vote.git
 ```
 ##### 2. Deploy the pipeline stack (fill in the `***blanks***`)
+Linux/Mac:
 ```
 aws cloudformation create-stack --stack-name ***CodePipelineName*** \
---template-body file://pipeline-cf.yml --parameters \
+--template-body file://pipeline-cf.yml --capabilities CAPABILITY_IAM --parameters \
 ParameterKey=CodePipelineName,ParameterValue=***CodePipelineName*** \
 ParameterKey=CodeRepoName,ParameterValue=***CodeRepoName*** \
 ParameterKey=CustomDomain,ParameterValue=***CustomDomain*** \
@@ -44,12 +45,25 @@ ParameterKey=CustomApiDomain,ParameterValue=***CustomApiDomain*** \
 ParameterKey=CustomApiDomainZoneId,ParameterValue=***CustomApiDomainZoneId*** \
 ParameterKey=EnvironmentName,ParameterValue=***EnvironmentName***
 ```
+Windows:
+```
+aws cloudformation create-stack --stack-name ***CodePipelineName*** --template-body file://pipeline-cf.yml --capabilities CAPABILITY_IAM --parameters "ParameterKey=CodePipelineName,ParameterValue=***CodePipelineName***" "ParameterKey=CodeRepoName,ParameterValue=***CodeRepoName***" "ParameterKey=CustomDomain,ParameterValue=***CustomDomain***" "ParameterKey=CustomDomainZoneId,ParameterValue=***CustomDomainZoneId***" "ParameterKey=CustomApiDomain,ParameterValue=***CustomApiDomain***" "ParameterKey=CustomApiDomainZoneId,ParameterValue=***CustomApiDomainZoneId***" "ParameterKey=EnvironmentName,ParameterValue=***EnvironmentName***"
+```
 ##### 3. Periodically describe the pipeline stack until it's "StackStatus" is "CREATE_COMPLETE"
 ```
 aws cloudformation describe-stacks --stack-name ***CodePipelineName***
 ```
 ##### 4. Make note of the "CodeCommitHTTPCloneUrl" output value once "StackStatus" is "CREATE_COMPLETE"
 ##### 5. Update your git config to use the new CodeCommit repository
+Linux/Mac:
+```
+rm -rf .git
+```
+Windows:
+```
+rmdir .git /s
+```
+Linux/Mac/Windows:
 ```
 git init
 git remote add origin ***CodeCommitHTTPCloneUrl***

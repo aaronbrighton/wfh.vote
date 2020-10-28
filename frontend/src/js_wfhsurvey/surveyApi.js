@@ -82,6 +82,18 @@ function surveyApi()
         });
     }
 
+    this.sendMessage = function(email, message, callback)
+    {
+        data = {
+            from_email: email,
+            message: message
+        }
+
+        this.api('message', 'PUT', JSON.stringify(data), function (apiResult){
+            callback(apiResult ? true : false)
+        });
+    }
+
     this.api = function(resource, method, data, callback)
     {
         var xhr = new XMLHttpRequest()
