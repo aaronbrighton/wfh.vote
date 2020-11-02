@@ -145,6 +145,7 @@
 										<p></p>
 										<p>By sharing, you're helping others gain the flexibility they desire while <b><a href="#" data-toggle="modal" data-target="#advantages-txt">saving lives and the planet</a></b> at the same time!</p>
 										<p>In Canada? Did you know the official <a href="https://www.canada.ca/en/public-health/services/diseases/coronavirus-disease-covid-19/covid-alert.html" target="_blank">COVID Alert app</a> is heavily focused on <a href="https://www.canada.ca/en/public-health/services/diseases/coronavirus-disease-covid-19/covid-alert.html#a1" target="_blank">privacy</a>?  Consider installing it today! <strong>Wfh.vote is not associated with the Canadian government.</strong></p>
+										<p><a href="#" data-toggle="modal" data-target="#contact-txt">Contact us!</a></p>
 									</div>
 								</div>
 								<!-- /step-->
@@ -152,6 +153,9 @@
 							<!-- /middle-wizard -->
 							<div id="bottom-wizard">
 								<button type="button" name="forward" class="forward">Next</button>
+								<div class="row">
+									<p><a href="#" data-toggle="modal" data-target="#contact-txt">Contact us!</a></p>
+								</div>
 								<div class="row" id="socialButtons" style="display:none;">
 									<div class="col-4" style="text-align:center">
 										<a href="https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Fwfh.vote%2F" class="socialButton" title="Share on Facebook" target="_blank"><img src="img/facebook.png" alt="Facebook" height="22"></a>
@@ -234,6 +238,33 @@
 					<p><b>Tracking & cookies</b> are used to ensure the integrity of the polling system, specifically to prevent repeat voting and/or other malicious attacks against our backend systems.</p>
 					<p><b>Third parties</b> are integral to making this survey site a reality.  This application is hosted on AWS (<a href="https://aws.amazon.com/" target="_blank">Amazon Web Services</a>), integrated with <a href="https://www.hcaptcha.com/">hCaptcha</a>.  While we make every effort to limit how these third parties track you, in some cases they may track you beyond the purposes of this site.</p>
 					<p><b>Sharing on social media</b> will make or break this survey site's success.  While we strongly encourage you to help spread the word about this survey site, you should be aware that social networks such as: <a href="https://www.facebook.com/">Facebook</a>, <a href="https://twitter.com/">Twitter</a>, and <a href="https://www.linkedin.com/">LinkedIn</a>, may track you beyond the purposes of this site and in some cases (for example, when you're the first vote for a given company) can be used to reveal which work from home preference you voted for.</p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn_1" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+			<!-- /.modal-content -->
+		</div>
+		<!-- /.modal-dialog -->
+	</div>
+	<!-- /.modal -->
+
+	<!-- Modal terms -->
+	<div class="modal fade" id="contact-txt" tabindex="-1" role="dialog" aria-labelledby="termsLabel" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title" id="termsLabel">Contact Us</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				</div>
+				<div class="modal-body">
+					<div class="form-group">
+						<b>Your Email</b><input type="text" name="contactMessageEmail" id="contactMessageEmail" class="form-control" placeholder="Your email address">
+					</div>
+					<div class="form-group">
+						<b>Message</b><input type="text" name="contactMessage" id="contactMessage" class="form-control" placeholder="What would you like to say?">
+					</div>
+					<button type="button" name="sendMessage" id="sendMessage" class="forward">Send Message</button>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn_1" data-dismiss="modal">Close</button>
