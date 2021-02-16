@@ -1,17 +1,28 @@
 # wfh.vote
 
-Frontend/Backend source for web service running live at: [https://wfh.vote/](https://wfh.vote/)
+Simple serverless voting service for employees to anonymously vote on their work from home preferences in the context of their company.
+
+See [wfh.vote](https://wfh.vote/) for a live example.
+
+## Features
+
+- Direct deployment via [AWS CloudFormation](https://aws.amazon.com/cloudformation/)
+- Pipeline deployment via [AWS CodePipeline](https://aws.amazon.com/codepipeline/)
+- Custom domain name support via [Amazon Route 53](https://aws.amazon.com/route53/) + automatic SSL via [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/)
+
+## Architecture
+
+![AWS Architecture Diagram](docs/wfh.vote.drawio.png)
+
+*Made using [draw.io](https://app.diagrams.net/), source file: [wfh.vote.drawio](docs/wfh.vote.drawio)*
 
 ## Prequisites
 
-* An AWS Account
-	* (Optionally) a domain who's DNS is managed/hosted in Route53 within the same account
-* AWS CLI
-	* With IAM user (Admin Perms.) created and credentials configured within your shell: [https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-config](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-config)
-	* IAM Git credentials generated and stored: [https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up-gc.html#setting-up-gc-iam](https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up-gc.html#setting-up-gc-iam)
-* SAM CLI
-* Python 3
-* Git (of course)
+* [Git](https://git-scm.com/) (of course)
+* [AWS Account](https://portal.aws.amazon.com/billing/signup#/), Optionally: [Route53 Public Hosted Zone](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html)
+* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-config), Optionally: [Git Credentials](https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up-gc.html#setting-up-gc-iam)
+* [Python 3](https://www.python.org/downloads/)
+* Optionally: [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
 
 ## Getting started (customization)
 
