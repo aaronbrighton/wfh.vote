@@ -95,9 +95,9 @@ git push --set-upstream origin master
 echo `aws cloudformation describe-stacks --stack-name CF-WFHVotePipeline-Frontend --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistribution'].OutputValue" --output text`
 ```
 
-### Additional Options
+## Additional Options
 
-#### Custom Domain Name
+### Custom Domain Name
 
 If you have an existing domain name in Route53, you can use the following stack parameters to customize the Frontend and Backend CloudFront domain names.  These are cutouts from the above commands with the additional parameters, reference only.
 
