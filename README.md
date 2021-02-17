@@ -4,17 +4,20 @@ Simple serverless voting service for employees to anonymously vote on their work
 
 See [wfh.vote](https://wfh.vote/) for a live example.
 
+
 ## Features
 
 - Direct deployment via [AWS CloudFormation](https://aws.amazon.com/cloudformation/)
 - Pipeline deployment via [AWS CodePipeline](https://aws.amazon.com/codepipeline/)
 - Custom domain name support via [Amazon Route 53](https://aws.amazon.com/route53/) + automatic SSL via [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/)
 
+
 ## Architecture
 
 ![AWS Architecture Diagram](docs/wfh.vote.drawio.png)
 
 *Made using [draw.io](https://app.diagrams.net/), source file: [wfh.vote.drawio](docs/wfh.vote.drawio)*
+
 
 ## Prequisites
 
@@ -24,71 +27,100 @@ See [wfh.vote](https://wfh.vote/) for a live example.
 * [Python 3](https://www.python.org/downloads/)
 * Optionally: [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
 
-## Getting started (customization)
 
-Jot down answers to the following questions:
+## Quick Deployment: CloudFormation
 
-##### 1. What name should I use for the CodePipeline pipeline? (**`***CodePipelineName***`**)
-##### 2. What name should I use for the CodeRepo repository? (**`***CodeRepoName***`**)
-##### 3. (Optional) Do I want to use a custom domain for the frontend? (**`***CustomDomain***`**)
-- What is the Route53 Zone ID where I can create this DNS record? (**`***CustomDomainZoneId***`**)
-##### 4. (Optional) Do I want to use a custom domain for the backend votes API? (**`***CustomApiDomain***`**)
-- What is the Route53 Zone ID where I can create this DNS record? (**`***CustomApiDomainZoneId***`**)
-##### 5. (Optional) Do I want to add a custom environment name to the start of the frontend `<title>` tag? (**`***EnvironmentName***`**)
-
-
-## Usage instructions:
-
-##### 1. Clone the repo
 ```
+# Clone the repo
+
 git clone https://github.com/aaronbrighton/wfh.vote.git
+cd wfh.vote
+
+# Deploy the FrontendStack
+
+aws cloudformation create-stack --stack-name WFHVoteFrontendStack --template-body file://frontend/cf.yml
+
+# Build & Deploy the BackendStack
+
+sam build --template-file services/votes/sam.yml --build-dir .aws-sam/build
+cd .aws-sam/build
+sam deploy --template-file template.yaml --stack-name WFHVoteBackendStack --parameter-overrides ParameterKey=FrontendCloudFormationStackName,ParameterValue=WFHVoteFrontendStack --guided
+cd ../../frontend/src/
+
+# Deploy FrontendStack static assets
+# WAIT FOR CF STACKS TO FINISH DEPLOYING FIRST
+
+FRONTEND_S3_BUCKET=`aws cloudformation describe-stacks --stack-name WFHVoteFrontendStack --query "Stacks[0].Outputs[?OutputKey=='S3Bucket'].OutputValue" --output text`
+API_ENDPOINT=`aws cloudformation describe-stacks --stack-name WFHVoteBackendStack --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistribution'].OutputValue" --output text`
+sed -i "s/{ENVIRONMENT_NAME}//g" index.html # If this fails, find/replace manually
+sed -i "s;{API_ENDPOINT};$API_ENDPOINT;g" index.html
+aws s3 sync --cache-control no-store --delete . s3://$FRONTEND_S3_BUCKET
+
+# Return the Frontend URL
+echo `aws cloudformation describe-stacks --stack-name WFHVoteFrontendStack --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistribution'].OutputValue" --output text`
 ```
-##### 2. Deploy the pipeline stack (fill in the `***blanks***`)
-Linux/Mac:
+
+
+## Complex Deployment: Pipeline Deployment
+
+This setup requires [Git Credentials](https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up-gc.html#setting-up-gc-iam) to be setup to allow pushing to AWS CodeCommit repositories.
+
 ```
-aws cloudformation create-stack --stack-name ***CodePipelineName*** \
+# Clone the repo
+
+git clone https://github.com/aaronbrighton/wfh.vote.git
+cd wfh.vote
+
+# Deploy the PipelineStack
+
+aws cloudformation create-stack --stack-name WFHVotePipelineStack \
 --template-body file://pipeline-cf.yml --capabilities CAPABILITY_IAM --parameters \
-ParameterKey=CodePipelineName,ParameterValue=***CodePipelineName*** \
-ParameterKey=CodeRepoName,ParameterValue=***CodeRepoName*** \
-ParameterKey=CustomDomain,ParameterValue=***CustomDomain*** \
-ParameterKey=CustomDomainZoneId,ParameterValue=***CustomDomainZoneId*** \
-ParameterKey=CustomApiDomain,ParameterValue=***CustomApiDomain*** \
-ParameterKey=CustomApiDomainZoneId,ParameterValue=***CustomApiDomainZoneId*** \
-ParameterKey=EnvironmentName,ParameterValue=***EnvironmentName***
-```
-Windows:
-```
-aws cloudformation create-stack --stack-name ***CodePipelineName*** --template-body file://pipeline-cf.yml --capabilities CAPABILITY_IAM --parameters "ParameterKey=CodePipelineName,ParameterValue=***CodePipelineName***" "ParameterKey=CodeRepoName,ParameterValue=***CodeRepoName***" "ParameterKey=CustomDomain,ParameterValue=***CustomDomain***" "ParameterKey=CustomDomainZoneId,ParameterValue=***CustomDomainZoneId***" "ParameterKey=CustomApiDomain,ParameterValue=***CustomApiDomain***" "ParameterKey=CustomApiDomainZoneId,ParameterValue=***CustomApiDomainZoneId***" "ParameterKey=EnvironmentName,ParameterValue=***EnvironmentName***"
-```
-##### 3. Periodically describe the pipeline stack until it's "StackStatus" is "CREATE_COMPLETE"
-```
-aws cloudformation describe-stacks --stack-name ***CodePipelineName***
-```
-##### 4. Make note of the "CodeCommitHTTPCloneUrl" output value once "StackStatus" is "CREATE_COMPLETE"
-##### 5. Update your git config to use the new CodeCommit repository
-Linux/Mac:
-```
+ParameterKey=CodePipelineName,ParameterValue=WFHVotePipeline \
+ParameterKey=CodeRepoName,ParameterValue=WFHVoteRepo
+
+# Push code to new CodeCommit repository
+# WAIT FOR CF PipelineStack TO FINISH DEPLOYING FIRST
+
+CODE_COMMIT_HTTP_URL=`aws cloudformation describe-stacks --stack-name WFHVotePipelineStack --query "Stacks[0].Outputs[?OutputKey=='CodeCommitHTTPCloneUrl'].OutputValue" --output text`
 rm -rf .git
-```
-Windows:
-```
-rmdir .git /s
-```
-Linux/Mac/Windows:
-```
 git init
-git remote add origin ***CodeCommitHTTPCloneUrl***
+git remote add origin $CODE_COMMIT_HTTP_URL
 git add *
 git commit -m "Initial commit"
 git push --set-upstream origin master
+
+# Return the Frontend URL
+# WAIT FOR CodePipeline TO FINISH DEPLOYING FIRST
+
+echo `aws cloudformation describe-stacks --stack-name CF-WFHVotePipeline-Frontend --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistribution'].OutputValue" --output text`
 ```
-##### 5. Periodically describe the pipeline until the stage "DeployFrontendStaticAssets" has a status of "Succeeded"
-```
-aws codepipeline get-pipeline-state --name ***CodePipelineName***
-```
-##### 6. Describe the frontend stack to get the URL for your live depoyment
+
+### Additional Options
+
+#### Custom Domain Name
+
+If you have an existing domain name in Route53, you can use the following stack parameters to customize the Frontend and Backend CloudFront domain names.  These are cutouts from the above commands with the additional parameters, reference only.
 
 ```
-aws cloudformation describe-stacks --stack-name CF-***CodePipelineName***-Frontend
+# Quick Deployment
+
+aws cloudformation create-stack --stack-name WFHVoteFrontendStack --template-body file://frontend/cf.yml --parameters \
+ParameterKey=CustomDomain,ParameterValue=wfh.vote \
+ParameterKey=CustomDomainZoneId,ParameterValue=Z07514403HBWCQT041GV0 \
+
+sam deploy --template-file template.yaml --stack-name WFHVoteBackendStack --guided --parameter-overrides \ ParameterKey=FrontendCloudFormationStackName,ParameterValue=WFHVoteFrontendStack \
+ParameterKey=CustomApiDomain,ParameterValue=api.wfh.vote \
+ParameterKey=CustomApiDomainZoneId,ParameterValue=Z07514403HBWCQT041GV0 \
+
+
+# Pipeline Deployment
+
+aws cloudformation create-stack --stack-name WFHVotePipelineStack \
+--template-body file://pipeline-cf.yml --capabilities CAPABILITY_IAM --parameters \
+ParameterKey=CodePipelineName,ParameterValue=WFHVotePipeline \
+ParameterKey=CodeRepoName,ParameterValue=WFHVoteRepo \
+ParameterKey=CustomDomain,ParameterValue=wfh.vote \
+ParameterKey=CustomDomainZoneId,ParameterValue=Z07514403HBWCQT041GV0 \
+ParameterKey=CustomApiDomain,ParameterValue=api.wfh.vote \
+ParameterKey=CustomApiDomainZoneId,ParameterValue=Z07514403HBWCQT041GV0 \
 ```
-##### 7. Make note of the "CloudFrontDistribution" output value, this is the URL to your live site!
